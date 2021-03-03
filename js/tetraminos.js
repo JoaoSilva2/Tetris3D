@@ -1,3 +1,5 @@
+let paused = false;
+var keyMap = [];
 let camera;
 let scene;
 let renderer;
@@ -11,6 +13,11 @@ const geometry = new THREE.BoxGeometry(5, 5, 5);
 const edges = new THREE.BoxGeometry(5, 0.2, 0.2);
 let controls;
 const axes = new THREE.AxesHelper(10);
+axes.position.y = 7.5;
+
+function onKeyDown(e){
+  keyMap[e.keyCode] = true;
+}
 
 class Cube extends THREE.Object3D {
   constructor(material) {
@@ -76,7 +83,7 @@ class Tetramino extends THREE.Object3D {
     super();
     const shape = Math.floor(Math.random() * 7);
 
-    /*switch (Math.floor(Math.random() * 4)) {
+    switch (Math.floor(Math.random() * 4)) {
       case 0:
         this.IShape();
         break;
@@ -89,8 +96,7 @@ class Tetramino extends THREE.Object3D {
       case 3:
         this.ASShape();
         break;
-    }*/
-    this.PShape();
+    }
   }
 
   //ISHAPE tetramino
@@ -122,17 +128,17 @@ class Tetramino extends THREE.Object3D {
     const cube3 = new Cube(this.material);
     const cube4 = new Cube(this.material);
 
-    cube1.position.set(0, 0, 0);
-    cube2.position.set(-5, 0, 0);
-    cube3.position.set(5, 0, 0);
-    cube4.position.set(-5, 5, 0);
+    cube1.position.set(0, 2.5, 0);
+    cube2.position.set(-5, 2.5, 0);
+    cube3.position.set(5, 2.5, 0);
+    cube4.position.set(-5, 7.5, 0);
 
     this.add(cube1);
     this.add(cube2);
     this.add(cube3);
     this.add(cube4);
 
-    this.position.set(2.5, 2.5, 2.5);
+    this.position.set(2.5, 0, 2.5);
   }
 
   Square() {
@@ -177,21 +183,6 @@ class Tetramino extends THREE.Object3D {
     this.position.set(0, 0, 2.5);
   }
 
-  check_colision() {
-    let collides = false;
-    this.traverse(function(node) {
-      if(node instanceof Cube) {
-        let pos = new THREE.Vector3();
-        node.getWorldPosition(pos);
-        console.log(pos.y);
-        if(pos.y <= 2.5) {
-          collides = true;
-        }
-      }
-    });
-    return collides;
-  }
-
   PShape(){
     this.material = new THREE.MeshBasicMaterial({color: 0x72CB3B});
 
@@ -215,6 +206,22 @@ class Tetramino extends THREE.Object3D {
 
     this.position.set(0, 0, 2.5);
   }
+
+  check_colision() {
+    let collides = false;
+    this.traverse(function(node) {
+      if(node instanceof Cube) {
+        let pos = new THREE.Vector3();
+        node.getWorldPosition(pos);
+        console.log(pos.y);
+        if(pos.y <= 2.5) {
+          collides = true;
+        }
+      }
+    });
+    return collides;
+  }
+
 }
 //------------------------------------------------------------------------------
 
@@ -249,27 +256,39 @@ function init(){
   scene = new THREE.Scene();
   scene.add(axes);
   camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 300);
-  camera.position.set(0,0,50);
+  camera.position.set(0,25,75);
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
-  scene.add(new Tetramino());
+  //scene.add(new Tetramino());
   gridMap();
+
+  window.addEventListener("keydown", onKeyDown);
 }
 
 function animate() {
   requestAnimationFrame(animate);
+
+  if(keyMap[80]){
+    paused = !paused;
+    keyMap[80] = false;
+  }
+
   delta = clock.getDelta()
-  /*if(wait){
-    time += delta
-    if(time > 1){
-      current.position.y -= 5;
-      time = 0;
-      console.log(wait);
-      if(current.check_colision()){
-        wait = false;
+  if(wait){
+    if(!paused){
+      time += delta
+      if(time > 1){
+        current.position.y -= 5;
+        current.updateMatrixWorld(true);
+        time = 0;
+        console.log(current);
+        //console.log(wait);
+        if(current.check_colision()){
+          wait = false;
+        }
       }
     }
   }
@@ -277,8 +296,9 @@ function animate() {
     current = new Tetramino();
     current.position.set(0,50,2.5);
     scene.add(current);
+    console.log(current);
     wait = true;
-  }*/
+  }
 
   controls.update();
   renderer.render(scene, camera);
